@@ -5,6 +5,7 @@ use CRM_Bemastokens_ExtensionUtil as E;
 
 function bemastokens_civicrm_tokens(&$tokens) {
   $tokens['bemastokens'] = array(
+    'bemastokens.werkgever_volledig_adres' => 'werkgever: 0. volledig adres (straat, postcode, plaats...)',
     'bemastokens.werkgever_straat' => 'werkgever: 1. straat en nummer',
     'bemastokens.werkgever_adreslijn1' => 'werkgever: 2. extra adreslijn1',
     'bemastokens.werkgever_adreslijn2' => 'werkgever: 3. extra adreslijn2',
@@ -34,6 +35,7 @@ function bemastokens_civicrm_tokenValues(&$values, $cids, $job = null, $tokens =
       // get the contact details
       $contact = bemastokens_getContactDetails($cid);
 
+      bemastokens_matchTokenWithField($cid, $tokens, $values, 'werkgever_volledig_adres', $contact->full_address);
       bemastokens_matchTokenWithField($cid, $tokens, $values, 'werkgever_straat', $contact->street_address);
       bemastokens_matchTokenWithField($cid, $tokens, $values, 'werkgever_adreslijn1', $contact->supplemental_address_1);
       bemastokens_matchTokenWithField($cid, $tokens, $values, 'werkgever_adreslijn2', $contact->supplemental_address_2);
@@ -68,6 +70,7 @@ function bemastokens_getContactDetails($id) {
       , a.supplemental_address_2
       , a.postal_code
       , a.city
+      , ctry.iso_code country_iso_code
       , ctry.name country_name
       , p.phone
       , e.email
@@ -98,6 +101,48 @@ function bemastokens_getContactDetails($id) {
 
   $contact = CRM_Core_DAO::executeQuery($sql, $sqlParams);
   $contact->fetch();
+
+  // create full_address
+  $contact->full_address = '';
+  if ($contact->street_address) {
+    $contact->full_address .= $contact->street_address;
+  }
+  if ($contact->supplemental_address_1) {
+    if (strlen($contact->full_address) > 0) {
+      $contact->full_address .= '<br>';
+    }
+    $contact->full_address .= $contact->supplemental_address_1;
+  }
+  if ($contact->supplemental_address_2) {
+    if (strlen($contact->full_address) > 0) {
+      $contact->full_address .= '<br>';
+    }
+    $contact->full_address .= $contact->supplemental_address_2;
+  }
+  if ($contact->postal_code) {
+    if (strlen($contact->full_address) > 0) {
+      $contact->full_address .= '<br>';
+    }
+    $contact->full_address .= $contact->postal_code;
+  }
+  if ($contact->city) {
+    if ($contact->postal_code) {
+      // there's a postal code, just add a space between postal code and city
+      $contact->full_address .= ' ' . $contact->city;
+    }
+    else {
+      if (strlen($contact->full_address) > 0) {
+        $contact->full_address .= '<br>';
+      }
+      $contact->full_address .= $contact->city;
+    }
+  }
+  if ($contact->country_name && $contact->country_iso_code != 'BE') {
+    if (strlen($contact->full_address) > 0) {
+      $contact->full_address .= '<br>';
+    }
+    $contact->full_address .= $contact->country_name;
+  }
 
   return $contact;
 }
@@ -142,7 +187,19 @@ function bemastokens_getMemberContacts($employerID) {
     }
   }
 
-  return implode(', ', $contactList);
+  if (count($contactList) > 1) {
+    // more than one record, return unordered list
+    $htmlList = '<ul>';
+    foreach ($contactList as $c) {
+      $htmlList .= "<li>$c</li>";
+    }
+    $htmlList .= '</ul>';
+    return $htmlList;
+  }
+  else {
+    // just one record, return string
+    return $contactList[0];
+  }
 }
 
 /**
