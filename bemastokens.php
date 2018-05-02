@@ -110,6 +110,7 @@ function bemastokens_getMemberContacts($employerID) {
       select
         c.first_name
         , c.last_name
+        , c.job_title
         , e.email
       from
         civicrm_contact c
@@ -129,6 +130,11 @@ function bemastokens_getMemberContacts($employerID) {
     $dao = CRM_Core_DAO::executeQuery($sql, $sqlParams);
     while ($dao->fetch()) {
       $contact = $dao->first_name . ' ' . $dao->last_name;
+
+      if ($dao->job_title) {
+        $contact .= ' - ' . $dao->job_title;
+      }
+
       if ($dao->email) {
         $contact .= ' (' . $dao->email . ')';
       }
