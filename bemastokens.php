@@ -87,7 +87,7 @@ function bemastokens_getContactDetails($id) {
       , act.activity__fr__5 description_fr
       , mt.name membership_type
       , m.join_date membership_join_date
-      , mt.minimum_fee membership_fee
+      , format(mt.minimum_fee, 2) membership_fee
     from
       civicrm_contact c
     left outer join
