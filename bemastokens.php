@@ -19,6 +19,9 @@ function bemastokens_civicrm_tokens(&$tokens) {
     'bemastokens.werkgever_omschrijving_fr' => 'werkgever: FR omschrijving bedrijfsactiviteit',
     'bemastokens.werkgever_omschrijving_en' => 'werkgever: EN omschrijving bedrijfsactiviteit',
     'bemastokens.werkgever_lidcontacten' => 'werkgever: lidcontacten',
+    'bemastokens.lid_sinds' => 'lid: sinds',
+    'bemastokens.lid_type' => 'lid: type lidmaatschap',
+    'bemastokens.lid_tarief' => 'lid: tarief lidmaatschap',
   );
 }
 
@@ -49,6 +52,10 @@ function bemastokens_civicrm_tokenValues(&$values, $cids, $job = null, $tokens =
       bemastokens_matchTokenWithField($cid, $tokens, $values, 'werkgever_omschrijving_fr', $contact->description_fr);
       bemastokens_matchTokenWithField($cid, $tokens, $values, 'werkgever_omschrijving_en', $contact->description_en);
 
+      bemastokens_matchTokenWithField($cid, $tokens, $values, 'lid_sinds', $contact->membership_join_date);
+      bemastokens_matchTokenWithField($cid, $tokens, $values, 'lid_type', $contact->membership_type);
+      bemastokens_matchTokenWithField($cid, $tokens, $values, 'lid_tarief', $contact->membership_fee);
+
       $membercontacts = bemastokens_getMemberContacts($contact->employer_id);
       bemastokens_matchTokenWithField($cid, $tokens, $values, 'werkgever_lidcontacten', $membercontacts);
     }
@@ -78,20 +85,29 @@ function bemastokens_getContactDetails($id) {
       , act.activity__nl__3 description_nl
       , act.activity__en__4 description_en
       , act.activity__fr__5 description_fr
+      , mt.name membership_type
+      , m.join_date membership_join_date
+      , mt.minimum_fee membership_fee
     from
       civicrm_contact c
-    left outer join 
+    left outer join
       civicrm_address a on a.contact_id = c.employer_id and a.is_primary = 1
-    left outer join 
+    left outer join
       civicrm_country ctry on a.country_id = ctry.id
-    left outer join 
+    left outer join
       civicrm_email e on e.contact_id = c.employer_id and e.is_primary = 1
-    left outer join 
+    left outer join
       civicrm_phone p on p.contact_id = c.employer_id and p.is_primary = 1
-    left outer join 
+    left outer join
       civicrm_website w on w.contact_id = c.employer_id
-    left outer join 
+    left outer join
       civicrm_value_activity_9 act on act.entity_id = c.employer_id
+    left outer join
+      civicrm_membership m on m.contact_id = c.employer_id and m.join_date <= NOW() and m.end_date >= NOW()
+    left outer join
+      civicrm_membership_type mt on mt.id = m.membership_type_id
+    left outer join
+      civicrm_membership_status ms on ms.id = m.status_id
     where
       c.id = %1
   ";
@@ -159,11 +175,11 @@ function bemastokens_getMemberContacts($employerID) {
         , e.email
       from
         civicrm_contact c
-      left outer join 
+      left outer join
         civicrm_value_individual_details_19 det on det.entity_id = c.id
-      left outer join 
+      left outer join
         civicrm_email e on e.contact_id = c.id and e.is_primary = 1
-      where 
+      where
         c.employer_id = %1
       and
         types_of_member_contact_60 in ('M1 - Primary member contact', 'Mc - Member contact')
