@@ -2,6 +2,7 @@
 
 Volgende tokens kunnen toegevoegd worden in mailings.
 
+## Werkgever
 * bemastokens.werkgever_volledig_adres
 * bemastokens.werkgever_straat
 * bemastokens.werkgever_adreslijn1
@@ -17,3 +18,8 @@ Volgende tokens kunnen toegevoegd worden in mailings.
 * bemastokens.werkgever_omschrijving_en
 * bemastokens.werkgever_lidcontacten
 
+# Lidmaatschap
+
+* bemastokens.lid_sinds
+* bemastokens.lid_type
+* bemastokens.lid_tarief
