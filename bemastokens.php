@@ -164,6 +164,9 @@ function bemastokens_getContactDetails($id) {
 }
 
 function bemastokens_getMemberContacts($employerID) {
+  $PRIMARY_MEMBER_CONTACT = 14;
+  $MEMBER_CONTACT = 15;
+
   $contactList = [];
 
   if ($employerID) {
@@ -182,7 +185,20 @@ function bemastokens_getMemberContacts($employerID) {
       where
         c.employer_id = %1
       and
-        types_of_member_contact_60 in ('M1 - Primary member contact', 'Mc - Member contact')
+        c.is_deleted = 0
+      and
+        exists (
+          select
+            rmc.id
+          from
+            civicrm_relationship rmc
+          where
+            rmc.contact_id_a = c.id
+          and
+            rmc.relationship_type_id in ($PRIMARY_MEMBER_CONTACT, $MEMBER_CONTACT)
+          and
+            rmc.is_active = 1
+        )
     ";
     $sqlParams = [
       1 => [$employerID, 'Integer'],
