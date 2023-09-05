@@ -8,9 +8,9 @@ class CRM_Bemastokens_Helper {
   }
 
   public static function replaceEventTokenValues(\Civi\Token\TokenRow $tokenRow) {
-    $eventId = $tokenRow->tokens['event']['id'];
+    $eventId = $tokenRow->context['eventId'];
     $event = self::getEvent($eventId);
-    if (empty($event['Evaluatie_evenement.Formulier_voor_deelnemers'])) {
+    if (!empty($event['Evaluatie_evenement.Formulier_voor_deelnemers'])) {
       $tokenRow->tokens('event','evalformurl', $event['Evaluatie_evenement.Formulier_voor_deelnemers']);
     }
   }

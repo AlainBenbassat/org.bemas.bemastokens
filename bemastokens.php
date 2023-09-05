@@ -21,7 +21,7 @@ function bemastokens_register_tokens(\Civi\Token\Event\TokenRegisterEvent $e) {
 
 function bemastokens_evaluate_tokens(\Civi\Token\Event\TokenValueEvent $e) {
   foreach ($e->getRows() as $tokenRow) {
-    if (!empty($tokenRow->tokens['event']['id'])) {
+    if (!empty($tokenRow->context['eventId'])) {
       CRM_Bemastokens_Helper::replaceEventTokenValues($tokenRow);
     }
   }
